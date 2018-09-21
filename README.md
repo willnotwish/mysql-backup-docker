@@ -1,3 +1,3 @@
-# mysql-backup-docker
 
-About the simplest backup routine.
+
+About the simplest mysql backup routine. Uses mysqldump.
