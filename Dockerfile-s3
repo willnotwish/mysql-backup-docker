@@ -1,0 +1,24 @@
+FROM alpine:latest
+
+# Note that the script name should *not* have any extension
+# https://wiki.alpinelinux.org/wiki/Alpine_Linux:FAQ#My_cron_jobs_don.27t_run.3F
+COPY backup /etc/periodic/15min/
+
+# Install mysql client and python+git for s3cmd
+RUN apk update && \
+    apk add python py-pip py-setuptools git ca-certificates mariadb-client && \
+    rm -rf /var/cache/apk/* && \
+    pip install python-dateutil && \
+    git clone https://github.com/s3tools/s3cmd.git /opt/s3cmd && \
+    ln -s /opt/s3cmd/s3cmd /usr/bin/s3cmd && \
+    chmod a+x /etc/periodic/15min/*
+
+# s3cmd config file (base only - will be updated when container starts from cmd.sh)
+COPY ./s3cfg.base /tmp/s3cfg
+
+# Include the startup script and make it executable
+COPY cmd.sh /tmp/
+RUN chmod +x /tmp/cmd.sh
+
+CMD ["/tmp/cmd.sh"]
+

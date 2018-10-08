@@ -1,14 +1,22 @@
 #!/bin/sh
 
+# Expects environment variable S3_BACKUP_BUCKET to be set to name of bucket to back up to
+
 BACKUP_FOLDER="/backup"
 NOW=$(date "+%d")
 
 GZIP="$(which gzip)"
 MYSQLDUMP="$(which mysqldump)"
+S3CMD="$(which s3cmd)"
 
 ### See comments below ###
 ### [ ! -d $BACKUP_FOLDER ] && mkdir -p $BACKUP_FOLDER || /bin/rm -f $BACKUP_FOLDER/* ###
 [ ! -d "$BACKUP_FOLDER" ] && mkdir -p "$BACKUP_FOLDER"
 
 FILE=$BACKUP_FOLDER/backup-$NOW.sql.gz
+
+echo "Dumping database to $FILE"
 $MYSQLDUMP -h mysql -u $MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DATABASE | $GZIP -9 > $FILE
+
+echo "Moving $FILE to space (S3) $S3_BACKUP_BUCKET"
+$S3CMD put $FILE s3://$S3_BACKUP_BUCKET/mysql-backup/
